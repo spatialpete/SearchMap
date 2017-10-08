@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Geocoding service</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #floating-panel {
+        position: absolute;
+        top: 10px;
+        left: 25%;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+        text-align: center;
+        font-family: 'Roboto','sans-serif';
+        line-height: 30px;
+        padding-left: 10px;
+      }
+      .customBox {
+        position: absolute;
+        text-shadow: 3px 0 0 000 white;
+        font-weight: bold;
+        font-size: 125%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="floating-panel">
+      <input id="address" type="textbox" value="302 S McNeill St, Carthage">
+      <input id="submit" type="button" value="Geocode">
+    </div>
+    <div id="map"></div>
+    
+    <script>
+      function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 11,
+          center: {lat: 35.3460, lng: -79.4170}
+        });
+        var geocoder = new google.maps.Geocoder();
+
+        document.getElementById('submit').addEventListener('click', function() {
+          geocodeAddress(geocoder, map);
+        });
+
+//Text overlays code
+// from http://stackoverflow.com/questions/3953922/is-it-possible-to-write-custom-text-on-google-maps-api-v3
+      function TxtOverlay(pos, txt, cls, map) {
+        this.pos = pos;
+        this.txt_ = txt;
+        this.cls_ = cls;
+        this.map_ = map;
+        this.div_ = null;
+        this.setMap(map);
+      }
+      TxtOverlay.prototype = new google.maps.OverlayView();
+      
+      TxtOverlay.prototype.onAdd = function() {
+        var div = document.createElement('DIV');
+        div.className = this.cls_;
+        div.innerHTML = this.txt_;
+        
+        this.div_ = div;
+        var overlayProjection = this.getProjection();
+        var position = overlayProjection.fromLatLngToDivPixel(this.pos);
+        div.style.left = position.x + 'px';
+        div.style.top = position.y + 'px';
+        
+        var panes = this.getPanes();
+        panes.floatPane.appendChild(div);
+      }
+      TxtOverlay.prototype.draw = function() {
+        var overlayProjection = this.getProjection();
+        var position = overlayProjection.fromLatLngToDivPixel(this.pos);
+        var div = this.div_;
+        div.style.left = position.x + 'px';
+        div.style.top = position.y + 'px';
+      }
+      // numLabels = counts number of labels created, increases with each one
+      var numLabels = 0;
+      var counter = 0;
+      // LatLabel / LongLabel = starting latitude and longitude
+      var LatLabel = 35.4978;
+      var LongLabel = -79.7614;
+      // counterList = increments by 34 (the number of rows)
+      var counterList = [34,68,102,136,170,204,238,272,306,340,374,408,442,476,510,544,578]
+      var counterListLength = counterList.length;
+      console.log("console list length: " + counterListLength)
+      // 1156 = maximum number of labels
+ 
+        // for loop to control horizontal position of labels
+        // at each iteration, LCell increases by 0.0169 
+        // this is then added to longitude to move the label into the next cell
+      var index;
+      var alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N",
+                      "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+      counterTop = 1
+      
+
+    for (index = 0; index < alphabet.length; ++index) {
+            var latlng = new google.maps.LatLng(LatLabel - 0.01679, LongLabel + (0.01689*counterTop));
+            txt = new TxtOverlay(latlng, alphabet[index], "customBox", map)
+            console.log("latitude decreased")
+            counterTop += 1;
+            }
+      
+      for (var LCell = 0.0169; LCell < 0.6; LCell += 0.0169){
+            var latlng = new google.maps.LatLng(LatLabel-LCell, LongLabel);
+            txt = new TxtOverlay(latlng, counter, "customBox", map)
+            counter += 1;
+            console.log("horizontal, counter: "+ counter)
+            }
+          
+        
+      
+
+
+//Vertical Lines
+//0.0145 is 1 mile in decimal degrees (latitude)
+        for (var i = 0.0169; i < 0.6; i+= 0.0169) {
+          var vertLineCoordinates = [
+            {lat: 35.4978, lng: -79.7614 + i},
+            {lat: 35.05, lng: -79.7614 + i}
+          ];
+          var vertLine = new google.maps.Polyline({
+            path: vertLineCoordinates,
+            geodesic: true,
+            strokeColor: '#d2b48c',
+            strokeOpacity: 1.0,
+            strokeWeight: 2
+          });
+          vertLine.setMap(map);
+        }
+
+//Horizontal Lines
+//0.0145 is 1 mile in decimal degrees (latitude)
+        for (var hz = 0.0145; hz < 0.46; hz+= 0.0145) {
+          var horzLineCoordinates = [
+            {lat: 35.05 + hz, lng: -79.7614},
+            {lat: 35.05 + hz, lng: -79.15}
+          ];
+          var horzLine = new google.maps.Polyline({
+            path: horzLineCoordinates,
+            geodesic: true,
+            strokeColor: '#d2b48c',
+            strokeOpacity: 1.0,
+            strokeWeight: 2
+          });
+          horzLine.setMap(map);
+        }
+
+//Map label for cells
+        var mapLabel = new MapLabel({
+          text: 'Test',
+          position: new google.maps.LatLng(35.05, -79.7614),
+          map: map,
+          fontSize: 35,
+          align: 'right'
+        });
+
+      }
+
+      function geocodeAddress(geocoder, resultsMap) {
+        var address = document.getElementById('address').value;
+        geocoder.geocode({'address': address}, function(results, status) {
+          if (status === 'OK') {
+            resultsMap.setCenter(results[0].geometry.location);
+            var marker = new google.maps.Marker({
+              map: resultsMap,
+              position: results[0].geometry.location
+            });
+          } else {
+            alert('Geocode was not successful for the following reason: ' + status);
+          }
+        });
+      }
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=PUT KEY HERE&callback=initMap">
+    </script>
+  </body>
+</html>
